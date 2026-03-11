@@ -1,0 +1,1 @@
+Parallésiation Maximale

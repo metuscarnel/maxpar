@@ -110,7 +110,6 @@ class TaskSystem:
         start = time.time()
         self.runSeq()
         seq_time = time.time() - start
-
         start = time.time()
         self.run()
         par_time = time.time() - start

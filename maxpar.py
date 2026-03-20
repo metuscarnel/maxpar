@@ -1,6 +1,6 @@
 import itertools
 import graphviz
-
+import time
 class Task:
     name = ""  # nom de la tâche
     reads = []  # domaine de lecture de la tâche
@@ -120,4 +120,13 @@ class TaskSystem:
         print("Not implemented yet")
 
     def parCost(self):
-        print("Not implemented yet")
+        start = time.time()
+        self.runSeq()
+        seq_time = time.time() - start
+        start = time.time()
+        self.run()
+        par_time = time.time() - start
+
+        print(f"Sequential time: {seq_time:.4f} secondes")
+        print(f"Parallel time: {par_time:.4f} secondes")
+        print("time_difference: {:.4f} secondes".format(seq_time - par_time))

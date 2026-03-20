@@ -35,7 +35,10 @@ class TaskSystem:
         return condition1 and condition2 and condition3
 
     def run(self):
-        print("Not implemented yet")
+        try:
+            self.generate_system_max().runSeq()
+        except ValueError as e:
+            print("Une erreur s'est produite:", e)
 
     def has_path(self, graph, start, end):
         visited = set()
@@ -49,7 +52,7 @@ class TaskSystem:
                 queue.extend(graph.get(current, []))
         return False
 
-    def determinated_system(self):
+    def is_determinated_system(self):
         for task1, task2 in itertools.combinations(self.tasks, 2):
             if not self.bernstein_conditions(task1, task2):
                 print(
@@ -60,6 +63,8 @@ class TaskSystem:
         return True
 
     def generate_system_max(self):
+        if not self.is_determinated_system():
+            raise ValueError("The system is not determinate. Cannot generate Smax.")
         smax_precedences_map = {task.name: [] for task in self.tasks}
         for task1, task2 in itertools.permutations(self.tasks, 2):
             if self.has_path(

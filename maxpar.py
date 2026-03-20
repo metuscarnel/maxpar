@@ -1,5 +1,5 @@
 import itertools
-
+import graphviz
 
 class Task:
     name = ""  # nom de la tâche
@@ -107,8 +107,14 @@ class TaskSystem:
                 if dep == task:  # une tâche ne peut pas dépendre d'elle-même
                     raise ValueError(f"Task {task} cannot depend on itself.")
 
-    def draw(self):
-        print("Not implemented yet")
+    def draw(self, filename="max_parallelised_system"):
+        dot = graphviz.Digraph(comment="Max Parallelised System : Smax")
+        for task in self.tasks:
+            dot.node(task.name)
+        for task, dependencies in self.precedences_map.items():
+            for dep in dependencies:
+                dot.edge(dep, task)
+        dot.render(filename, format="png", cleanup=True)
 
     def detTestRnd(self, globals):
         print("Not implemented yet")

@@ -27,10 +27,10 @@ def run_t4():
 
 if __name__ == "__main__":
     # Définition des objets Task
-    t1 = Task("T1", [], ["X"], run_t1)
+    t1 = Task("T1", ["X"], [], run_t1)
     t2 = Task("T2", [], ["Y"], run_t2)
-    t3 = Task("T3", ["X", "Y"], ["Z"], run_t3)
-    t4 = Task("T4", ["X"], ["X"], run_t4)
+    t3 = Task("T3", ["X"], ["Z"], run_t3)
+    t4 = Task("T4", ["X"], [], run_t4)
 
     tasks = [t1, t2, t3, t4]
 

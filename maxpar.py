@@ -145,6 +145,6 @@ class TaskSystem:
         for task, dependencies in self.precedences_map.items():
             for dep in dependencies:
                 print(f"Task {task} depends on {dep}")
-        #print("Smax precedences map:")
-        #for task, dependencies in self.generate_system_max().precedences_map.items():
-            #print(f"Task: {task}, Dependencies: {dependencies}")
+        print("Smax precedences map:")
+        print(self.generate_system_max().precedences_map)
+        self.draw("temporary_smax_graph")

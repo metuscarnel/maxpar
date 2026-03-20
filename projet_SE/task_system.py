@@ -81,6 +81,7 @@ class TaskSystem:
                 for task_name in level:
                     executor.submit(self.tasks[task_name].run)
 
+    # --- Groupement par niveaux ---
     def _group_by_levels(self, order):
         levels = []
         while order:
@@ -93,17 +94,46 @@ class TaskSystem:
             order = [task for task in order if task not in current_level]
         return levels
 
-    # --- Test de déterminisme ---
-    def detTestRnd(self, globals_dict, num_tests=5):
-        initial_globals = {k: globals_dict[k] for k in ['X', 'Y', 'Z'] if k in globals_dict}
-        results = []
+    # --- Test randomisé de déterminisme ---
+    def detTestRnd(self, globals_dict, num_tests=5, num_runs=3):
+        """
+        globals_dict : dictionnaire retourné par globals() dans le module appelant
+        num_tests : nombre de jeux de valeurs aléatoires
+        num_runs : nombre d'exécutions parallèles par jeu de valeurs
+        """
+
+        # On ne teste que les variables globales numériques
+        variables = [var for var in globals_dict if isinstance(globals_dict[var], (int, float))]
+
         for _ in range(num_tests):
-            for var in ['X', 'Y', 'Z']:
-                if var in globals_dict:
-                    globals_dict[var] = random.randint(1, 100)
-            self.run()
-            results.append({k: globals_dict[k] for k in ['X', 'Y', 'Z'] if k in globals_dict})
-        return all(result == results[0] for result in results)
+
+            # 1) Générer un jeu de valeurs aléatoires
+            initial_values = {var: random.randint(1, 100) for var in variables}
+
+            # 2) Stocker les résultats de plusieurs exécutions parallèles
+            run_results = []
+
+            for _ in range(num_runs):
+
+                # Réinitialiser les variables globales
+                for var, val in initial_values.items():
+                    globals_dict[var] = val
+
+                # Exécuter le système en parallèle
+                self.run()
+
+                # Sauvegarder les valeurs finales
+                final_state = {var: globals_dict[var] for var in variables}
+                run_results.append(final_state)
+
+            # 3) Vérifier si toutes les exécutions donnent le même résultat
+            if any(run_results[i] != run_results[0] for i in range(1, num_runs)):
+                print("⚠️ Le système N'EST PAS déterministe pour le jeu :", initial_values)
+                print("Résultats obtenus :", run_results)
+                return False
+
+        print("✔️ Le système semble déterministe selon les tests randomisés.")
+        return True
 
     # --- Comparaison des coûts ---
     def parCost(self):

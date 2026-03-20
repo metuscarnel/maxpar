@@ -6,15 +6,21 @@ class Task:
     reads = []  # domaine de lecture de la tâche
     writes = []  # domaine d'écriture de la tâche
     run = None  # la fonction qui déterminera le comportement de la tâche
+    def __init__(self, name, reads, writes, run):
+        self.name = name
+        self.reads = reads
+        self.writes = writes
+        self.run = run
 
 
 class TaskSystem:
+    tasks = []  # liste des tâches à exécuter
+    precedences_map = {}
     def __init__(self, tasks=None, precedences_map=None):
         self.tasks = tasks if tasks is not None else []
         self.precedences_map = precedences_map if precedences_map is not None else {}
 
-    tasks = []  # liste des tâches à exécuter
-    precedences_map = {}
+    
 
     def getDependancies(self, task_name):
         return self.precedences_map[task_name]
@@ -120,13 +126,25 @@ class TaskSystem:
         print("Not implemented yet")
 
     def parCost(self):
+        cache_intialized_time = 0.2 
         start = time.time()
         self.runSeq()
         seq_time = time.time() - start
         start = time.time()
         self.run()
         par_time = time.time() - start
-
-        print(f"Sequential time: {seq_time:.4f} secondes")
-        print(f"Parallel time: {par_time:.4f} secondes")
-        print("time_difference: {:.4f} secondes".format(seq_time - par_time))
+        
+        print(f"Sequential time: {seq_time:.2f} secondes")
+        print("Cache intialiesation time adopted: {:.2f} secondes".format(cache_intialized_time))
+        print(f"Parallel time: {par_time:.2f} secondes")
+        print("time_difference: {:.2f} secondes".format((seq_time - par_time)-cache_intialized_time))
+    
+    def temporary_draw_test(self):
+        for task in self.tasks:
+            print(f"Task: {task.name}, Reads: {task.reads}, Writes: {task.writes}")
+        for task, dependencies in self.precedences_map.items():
+            for dep in dependencies:
+                print(f"Task {task} depends on {dep}")
+        #print("Smax precedences map:")
+        #for task, dependencies in self.generate_system_max().precedences_map.items():
+            #print(f"Task: {task}, Dependencies: {dependencies}")

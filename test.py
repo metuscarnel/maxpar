@@ -41,14 +41,14 @@ if __name__ == "__main__":
 
     # Initialisation du système
     sys = TaskSystem(tasks, precedence)
-    
+    sys.temporary_draw_test()
     # 1. Génération du PNG dans le répertoire courant
     print("--- Génération du graphe ---")
-    sys.draw("mon_graphe_execution")
+    #sys.draw("mon_graphe_execution")
 
     # 2. Test des performances (Séquentiel vs Parallèle)
     print("\n--- Analyse des coûts ---")
-    sys.parCost()
+    #sys.parCost()
 
     # 3. Vérification du résultat final
-    print(f"\nÉtat final de la mémoire : {memory}")
+    #print(f"\nÉtat final de la mémoire : {memory}")

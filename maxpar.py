@@ -165,16 +165,23 @@ class TaskSystem:
                 raise ValueError(
                     f"Invalid task: {task}. All tasks must be instances of Task class."
                 )
-        for task, dependencies in self.precedences_map.items():
-            if task not in self.tasks:  # la tâche doit être dans la liste des tâches
-                raise ValueError(f"Task {task} in precedence map is not in tasks list.")
-            for (
-                dep
-            ) in dependencies:  # les dépendances doivent être dans la liste des tâches
-                if dep not in self.tasks:
-                    raise ValueError(
-                        f"Dependency {dep} for task {task} is not in tasks list."
-                    )
+        for task_name, dependencies_names in self.precedences_map.items():
+            print ("Checking task: ", task_name)
+            for objet in self.tasks:
+                if objet.name == task_name:
+                    task = objet
+                    break
+            else:                raise ValueError(f"Task {task_name} in precedence map is not in tasks list.")
+            for dep_name in dependencies_names:
+                print ("  Checking dependency: ", dep_name)
+                for objet in self.tasks:
+                    if objet.name == dep_name:
+                        dep = objet
+                        break
+                else:
+                    raise ValueError(f"Dependency {dep_name} for task {task_name} is not in tasks list.")
+                if dep_name == task_name:
+                    raise ValueError(f"Task {task_name} cannot depend on itself.")
                 if dep == task:  # une tâche ne peut pas dépendre d'elle-même
                     raise ValueError(f"Task {task} cannot depend on itself.")
 

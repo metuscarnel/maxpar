@@ -1,11 +1,15 @@
 import itertools
 import graphviz
 import time
+import threading
+
+
 class Task:
     name = ""  # nom de la tâche
     reads = []  # domaine de lecture de la tâche
     writes = []  # domaine d'écriture de la tâche
     run = None  # la fonction qui déterminera le comportement de la tâche
+
     def __init__(self, name, reads, writes, run):
         self.name = name
         self.reads = reads
@@ -16,19 +20,23 @@ class Task:
 class TaskSystem:
     tasks = []  # liste des tâches à exécuter
     precedences_map = {}
+
     def __init__(self, tasks=None, precedences_map=None):
         self.tasks = tasks if tasks is not None else []
         self.precedences_map = precedences_map if precedences_map is not None else {}
-
-    
+        # Ensure all task names have entries in precedences_map
+        for task in self.tasks:
+            if task.name not in self.precedences_map:
+                self.precedences_map[task.name] = []
 
     def getDependancies(self, task_name):
         return self.precedences_map[task_name]
 
     def runSeq(self):
         for task in self.tasks:
-            if self.precedences_map[task.name] is not None:
-                for dep in self.precedences_map[task.name]:
+            deps = self.precedences_map.get(task.name, [])
+            if deps:
+                for dep in deps:
                     dep.run()
             task.run()
 
@@ -40,11 +48,41 @@ class TaskSystem:
         condition3 = not set(task2.writes).intersection(set(task1.reads))
         return condition1 and condition2 and condition3
 
+
     def run(self):
-        try:
-            self.generate_system_max().runSeq()
-        except ValueError as e:
-            print("Une erreur s'est produite:", e)
+        # 1. On récupère le graphe optimisé Smax
+        smax = self.generate_system_max()
+        
+        taches_restantes = list(smax.tasks)
+        taches_terminees = set()
+
+        # Tant qu'il reste des tâches à exécuter...
+        while taches_restantes:
+            taches_pretes = []
+            
+            # 2. On cherche quelles tâches sont prêtes à démarrer
+            for tache in taches_restantes:
+                # On trouve qui doit s'exécuter avant cette tâche
+                predecesseurs = [u.name for u in smax.tasks if tache.name in smax.precedences_map[u.name]]
+                
+                # Si tous ses prédécesseurs sont déjà terminés, elle est prête !
+                if all(p in taches_terminees for p in predecesseurs):
+                    taches_pretes.append(tache)
+
+            # 3. On lance la vague de tâches prêtes EN PARALLÈLE
+            threads = []
+            for tache in taches_pretes:
+                print(f"Lancement de {tache.name}...")
+                t = threading.Thread(target=tache.run) # Crée le thread
+                threads.append((tache, t))
+                t.start() # Démarre la tâche en arrière-plan
+
+            # 4. On attend que TOUTE la vague soit finie avant de passer à la suite
+            for tache, t in threads:
+                t.join() # Bloque jusqu'à la fin du thread
+                taches_terminees.add(tache.name)
+                taches_restantes.remove(tache)
+                print(f"[{tache.name} terminée]")
 
     def has_path(self, graph, start, end):
         visited = set()
@@ -73,10 +111,8 @@ class TaskSystem:
             raise ValueError("The system is not determinate. Cannot generate Smax.")
         smax_precedences_map = {task.name: [] for task in self.tasks}
         for task1, task2 in itertools.permutations(self.tasks, 2):
-            if self.has_path(
-                self.precedences_map, task1.name, task2.name
-            ) or self.has_path(self.precedences_map, task2.name, task1.name):
-                if not self.bernstein_conditions(task1, task2):
+            if self.has_path(self.precedences_map, task1.name, task2.name):
+                if self.bernstein_conditions(task1, task2):
                     smax_precedences_map[task1.name].append(task2.name)
         smax_precedecences_reduced_map = {
             k: list(v) for k, v in smax_precedences_map.items()
@@ -84,12 +120,13 @@ class TaskSystem:
         for task in smax_precedences_map:
             for dep in smax_precedences_map[task]:
                 smax_precedecences_reduced_map[task].remove(dep)
-                if not self.has_path(smax_precedences_map, task, dep):
+                if not self.has_path(smax_precedecences_reduced_map, task, dep):
                     smax_precedecences_reduced_map[task].append(dep)
 
-        Smax = TaskSystem()
-        Smax.tasks = self.tasks
-        Smax.precedences_map = smax_precedecences_reduced_map
+        Smax = TaskSystem(
+            tasks=self.tasks, precedences_map=smax_precedecences_reduced_map
+        )
+
         return Smax
 
     def check_input(self):
@@ -126,25 +163,31 @@ class TaskSystem:
         print("Not implemented yet")
 
     def parCost(self):
-        cache_intialized_time = 0.2 
         start = time.time()
         self.runSeq()
         seq_time = time.time() - start
         start = time.time()
         self.run()
         par_time = time.time() - start
-        
+
         print(f"Sequential time: {seq_time:.2f} secondes")
-        print("Cache intialiesation time adopted: {:.2f} secondes".format(cache_intialized_time))
         print(f"Parallel time: {par_time:.2f} secondes")
-        print("time_difference: {:.2f} secondes".format((seq_time - par_time)-cache_intialized_time))
-    
+        print("time_difference: {:.2f} secondes".format((seq_time - par_time)))
+
     def temporary_draw_test(self):
         for task in self.tasks:
             print(f"Task: {task.name}, Reads: {task.reads}, Writes: {task.writes}")
+            for domain in task.reads:
+                print(f"  - Reads from: {domain}")
+            for domain in task.writes:
+                print(f"  - Writes to: {domain}")
         for task, dependencies in self.precedences_map.items():
             for dep in dependencies:
                 print(f"Task {task} depends on {dep}")
-        print("Smax precedences map:")
+
         print(self.generate_system_max().precedences_map)
-        self.draw("temporary_smax_graph")
+
+        print("Initial graph:")
+        self.draw("temporary_initial_graph")
+        print("Smax precedences map:")
+        self.generate_system_max().draw("temporary_smax_graph")

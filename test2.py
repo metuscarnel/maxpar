@@ -10,7 +10,7 @@ def run_t1():
     memory["X"] = 10
     print("T1 terminé")
 
-def run_t2():
+def run_t2():   
     time.sleep(0.5)
     memory["Y"] = 20
     print("T2 terminé")
@@ -27,36 +27,28 @@ def run_t4():
 
 if __name__ == "__main__":
     # Définition des objets Task
-    t1 = Task("T1", ["X"], [], run_t1)
-    t2 = Task("T2", [], ["Y"], run_t2)
-    t3 = Task("T3", ["X"], ["Z"], run_t3)
-    t4 = Task("T4", ["X"], [], run_t4)
-    t5 = Task("T5", ["X"], [], run_t2)
-    t6 = Task("T6", ["X"], [], run_t3)
-    t7 = Task("T7", ["X"], [], run_t4)
-    
-    tasks = [t1, t2, t3, t4, t5, t6, t7]
+    t1 = Task("T1", ["X"], ["X"], run_t1)
+    t2 = Task("T2", ["Y"], [], run_t2)
+    t3 = Task("T3", ["X", "Y"], ["Z"], run_t3)
+    t4 = Task("T4", ["X"],[], run_t4)
+
+    tasks = [t1, t2, t3, t4]
 
     # Précédences minimales : on laisse Bernstein faire le reste
     precedence = {
-        "T2": ["T1"],
-        "T3": ["T1", "T2"],
-        "T4": ["T1"],
-        "T5": ["T2"],
-        "T6": ["T3"],
-        "T7": ["T4"]
+        #"T3": ["T1", "T2"]
     }
 
     # Initialisation du système
     sys = TaskSystem(tasks, precedence)
-    sys.temporary_draw_test()
+    
     # 1. Génération du PNG dans le répertoire courant
     print("--- Génération du graphe ---")
-    #sys.draw("mon_graphe_execution")
+    sys.draw("mon_graphe_execution")
 
     # 2. Test des performances (Séquentiel vs Parallèle)
     print("\n--- Analyse des coûts ---")
-    #sys.parCost()
+    sys.parCost()
 
     # 3. Vérification du résultat final
-    #print(f"\nÉtat final de la mémoire : {memory}")
+    print(f"\nÉtat final de la mémoire : {memory}")

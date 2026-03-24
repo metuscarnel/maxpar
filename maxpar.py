@@ -2,8 +2,8 @@ import itertools
 import graphviz
 import time
 import threading
-
-
+import random
+from collections import defaultdict
 class Task:
     name = ""  # nom de la tâche
     reads = []  # domaine de lecture de la tâche
@@ -31,13 +31,33 @@ class TaskSystem:
 
     def getDependancies(self, task_name):
         return self.precedences_map[task_name]
+    def _build_graph(self):
+        graph = defaultdict(list)
+        for task_name, dependencies in self.precedences_map.items():
+            for dep in dependencies:
+                graph[dep].append(task_name)
+        return graph
+    def topological_sort(self):
+        graph = self._build_graph()
+        visited = set()
+        order = []
 
+        def dfs(node):
+            if node not in visited:
+                visited.add(node)
+                for neighbor in graph.get(node, []):
+                    dfs(neighbor)
+                order.append(node)
+
+        for task_name in self.tasks:
+            dfs(task_name)
+
+        return order[::-1]  
+    # le tri topologique permet d'avoir un ordre total.
+    # --- Exécution séquentielle ---
     def runSeq(self):
-        for task in self.tasks:
-            deps = self.precedences_map.get(task.name, [])
-            if deps:
-                for dep in deps:
-                    dep.run()
+        order = self.topological_sort()
+        for task in order:
             task.run()
 
     # conditions de bersntein :
@@ -159,8 +179,35 @@ class TaskSystem:
                 dot.edge(dep, task)
         dot.render(filename, format="png", cleanup=True)
 
-    def detTestRnd(self, globals):
-        print("Not implemented yet")
+    def detTestRnd(self, globals_vars, nb_iterations=2):
+        all_variables = set()
+        for task in self.tasks:
+            all_variables.update(task.reads)
+            all_variables.update(task.writes)
+        inits_values = {}
+        for _ in range(nb_iterations):
+            print(f"--- Iteration {_+1} ---")
+            for var in all_variables:
+                inits_values[var]=random.randint(0, 10)
+        print(f"Initial variable values: {inits_values}")
+        print("Start determinism test...")
+        for var, value in inits_values.items():
+            globals_vars[var] = value
+
+        self.run()
+        result1={var: globals_vars[var] for var in all_variables}
+        for var, value in inits_values.items():
+            globals_vars[var] = value
+        self.run()
+        result2={var: globals_vars[var] for var in all_variables}
+        print(f"Result of first run: {result1}")
+        print(f"Result of second run: {result2}")
+        if result1 != result2:
+            print("The system is not deterministic.")
+            return False
+        else:
+            print("The system is deterministic.")
+            return True
 
     def parCost(self):
         start = time.time()
@@ -169,7 +216,6 @@ class TaskSystem:
         start = time.time()
         self.run()
         par_time = time.time() - start
-
         print(f"Sequential time: {seq_time:.2f} secondes")
         print(f"Parallel time: {par_time:.2f} secondes")
         print("time_difference: {:.2f} secondes".format((seq_time - par_time)))

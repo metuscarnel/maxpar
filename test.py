@@ -64,7 +64,7 @@ if __name__ == "__main__":
     print("--- Génération du graphe ---")
     #sys.draw("mon_graphe_execution")
     #sys.runSeq()
-    sys.detTestRnd(globals(), nb_iterations=3)
+    sys.check_input()
 
     # 2. Test des performances (Séquentiel vs Parallèle)
     print("\n--- Analyse des coûts ---")

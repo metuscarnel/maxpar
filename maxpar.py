@@ -4,6 +4,8 @@ import time
 import threading
 import random
 from collections import defaultdict
+
+
 class Task:
     name = ""  # nom de la tâche
     reads = []  # domaine de lecture de la tâche
@@ -31,12 +33,14 @@ class TaskSystem:
 
     def getDependancies(self, task_name):
         return self.precedences_map[task_name]
+
     def _build_graph(self):
         graph = defaultdict(list)
         for task_name, dependencies in self.precedences_map.items():
             for dep in dependencies:
                 graph[dep].append(task_name)
         return graph
+
     def topological_sort(self):
         graph = self._build_graph()
         visited = set()
@@ -52,7 +56,8 @@ class TaskSystem:
         for task_name in self.tasks:
             dfs(task_name)
 
-        return order[::-1]  
+        return order[::-1]
+
     # le tri topologique permet d'avoir un ordre total.
     # --- Exécution séquentielle ---
     def runSeq(self):
@@ -68,23 +73,26 @@ class TaskSystem:
         condition3 = not set(task2.writes).intersection(set(task1.reads))
         return condition1 and condition2 and condition3
 
-
     def run(self):
         # 1. On récupère le graphe optimisé Smax
         smax = self.generate_system_max()
-        
+
         taches_restantes = list(smax.tasks)
         taches_terminees = set()
 
         # Tant qu'il reste des tâches à exécuter...
         while taches_restantes:
             taches_pretes = []
-            
+
             # 2. On cherche quelles tâches sont prêtes à démarrer
             for tache in taches_restantes:
                 # On trouve qui doit s'exécuter avant cette tâche
-                predecesseurs = [u.name for u in smax.tasks if tache.name in smax.precedences_map[u.name]]
-                
+                predecesseurs = [
+                    u.name
+                    for u in smax.tasks
+                    if tache.name in smax.precedences_map[u.name]
+                ]
+
                 # Si tous ses prédécesseurs sont déjà terminés, elle est prête !
                 if all(p in taches_terminees for p in predecesseurs):
                     taches_pretes.append(tache)
@@ -93,13 +101,13 @@ class TaskSystem:
             threads = []
             for tache in taches_pretes:
                 print(f"Lancement de {tache.name}...")
-                t = threading.Thread(target=tache.run) # Crée le thread
+                t = threading.Thread(target=tache.run)  # Crée le thread
                 threads.append((tache, t))
-                t.start() # Démarre la tâche en arrière-plan
+                t.start()  # Démarre la tâche en arrière-plan
 
             # 4. On attend que TOUTE la vague soit finie avant de passer à la suite
             for tache, t in threads:
-                t.join() # Bloque jusqu'à la fin du thread
+                t.join()  # Bloque jusqu'à la fin du thread
                 taches_terminees.add(tache.name)
                 taches_restantes.remove(tache)
                 print(f"[{tache.name} terminée]")
@@ -188,18 +196,18 @@ class TaskSystem:
         for _ in range(nb_iterations):
             print(f"--- Iteration {_+1} ---")
             for var in all_variables:
-                inits_values[var]=random.randint(0, 10)
+                inits_values[var] = random.randint(0, 10)
         print(f"Initial variable values: {inits_values}")
         print("Start determinism test...")
         for var, value in inits_values.items():
             globals_vars[var] = value
 
         self.run()
-        result1={var: globals_vars[var] for var in all_variables}
+        result1 = {var: globals_vars[var] for var in all_variables}
         for var, value in inits_values.items():
             globals_vars[var] = value
         self.run()
-        result2={var: globals_vars[var] for var in all_variables}
+        result2 = {var: globals_vars[var] for var in all_variables}
         print(f"Result of first run: {result1}")
         print(f"Result of second run: {result2}")
         if result1 != result2:

@@ -1,6 +1,6 @@
 import time
 #from task_system import Task, TaskSystem  # Assure-toi que le nom du fichier est correct
-from maxpar import Task, TaskSystem
+from max import Task, TaskSystem
 # Simulation de données partagées
 memory = {"X": 0, "Y": 0, "Z": 0}
 
@@ -48,6 +48,7 @@ if __name__ == "__main__":
 
     # Précédences minimales : on laisse Bernstein faire le reste
     precedence = {
+        "T1": [],
         "T2": ["T1"],
         "T3": ["T1"],
         "T4": ["T2"],
@@ -62,9 +63,8 @@ if __name__ == "__main__":
     #sys.detTestRnd(globals(), nb_iterations=3)
     # 1. Génération du PNG dans le répertoire courant
     print("--- Génération du graphe ---")
-    #sys.draw("mon_graphe_execution")
-    #sys.runSeq()
-    print(sys.getDependancies("T8"))
+    #sys.draw("mon_graphe_execution")sy)
+    sys.parCost()
 
     # 2. Test des performances (Séquentiel vs Parallèle)
     print("\n--- Analyse des coûts ---")

@@ -21,8 +21,8 @@ class Task:
 
 class TaskSystem:
     tasks = []  # liste des tâches à exécuter
-    precedences_map = {}
-
+    precedences_map = {} #dictionnaire donnant les contraintes de précédences entre les tâches
+ 
     def __init__(self, tasks=None, precedences_map=None):
         self.tasks = tasks if tasks is not None else []
         self.precedences_map = precedences_map if precedences_map is not None else {}
@@ -31,17 +31,21 @@ class TaskSystem:
             if task.name not in self.precedences_map:
                 self.precedences_map[task.name] = []
 
-    def getDependancies(self, task_name):
-        return self.precedences_map[task_name]
+    def getDependancies(self, task_name): #recupère les dépendances d'une tâche donnée
+        dependancies = []
+        for task, dependencies in self.precedences_map.items():
+            if task == task_name:
+                dependancies.extend(dependencies)
+        return dependancies
 
-    def _build_graph(self):
+    def _build_graph(self): #construit un graphe à partir des précédences pour faciliter le tri topologique
         graph = defaultdict(list)
         for task_name, dependencies in self.precedences_map.items():
             for dep in dependencies:
                 graph[dep].append(task_name)
         return graph
 
-    def topological_sort(self):
+    def topological_sort(self): #effectue un tri topologique sur le graphe des tâches pour déterminer un ordre total d'exécution respectant les précédences
         graph = self._build_graph()
         visited = set()
         order = []
@@ -59,21 +63,20 @@ class TaskSystem:
         return order[::-1]
 
     # le tri topologique permet d'avoir un ordre total.
-    # --- Exécution séquentielle ---
-    def runSeq(self):
+    def runSeq(self): #exécute les tâches dans un ordre séquentiel respectant les précédences, se sert du tri topologique pour déterminer cet ordre
         order = self.topological_sort()
         for task in order:
             task.run()
 
     # conditions de bersntein :
-    @staticmethod
+    @staticmethod #permet de vérifier si deux tâches sont indépendantes selon les conditions de Bernstein, c'est-à-dire qu'elles n'ont pas de conflits de lecture/écriture sur les mêmes variables
     def bernstein_conditions(task1, task2):
         condition1 = not set(task1.writes).intersection(set(task2.reads))
         condition2 = not set(task1.writes).intersection(set(task2.writes))
         condition3 = not set(task2.writes).intersection(set(task1.reads))
         return condition1 and condition2 and condition3
 
-    def run(self):
+    def run(self): # execution parallèle des tâches incluant la generatiou du graphe de parallélisation maximale Smax, la détection des tâches prêtes à s'exécuter en parallèle via de threads
         # 1. On récupère le graphe optimisé Smax
         smax = self.generate_system_max()
 
@@ -84,9 +87,7 @@ class TaskSystem:
         while taches_restantes:
             taches_pretes = []
 
-            # 2. On cherche quelles tâches sont prêtes à démarrer
             for tache in taches_restantes:
-                # On trouve qui doit s'exécuter avant cette tâche
                 predecesseurs = [
                     u.name
                     for u in smax.tasks
@@ -96,23 +97,21 @@ class TaskSystem:
                 # Si tous ses prédécesseurs sont déjà terminés, elle est prête !
                 if all(p in taches_terminees for p in predecesseurs):
                     taches_pretes.append(tache)
-
-            # 3. On lance la vague de tâches prêtes EN PARALLÈLE
+            # lancement des tâches en parallèle
             threads = []
             for tache in taches_pretes:
                 print(f"Lancement de {tache.name}...")
-                t = threading.Thread(target=tache.run)  # Crée le thread
+                t = threading.Thread(target=tache.run) 
                 threads.append((tache, t))
-                t.start()  # Démarre la tâche en arrière-plan
+                t.start() 
 
-            # 4. On attend que TOUTE la vague soit finie avant de passer à la suite
             for tache, t in threads:
-                t.join()  # Bloque jusqu'à la fin du thread
+                t.join()  # attend que la tâche soit terminée
                 taches_terminees.add(tache.name)
                 taches_restantes.remove(tache)
                 print(f"[{tache.name} terminée]")
 
-    def has_path(self, graph, start, end):
+    def has_path(self, graph, start, end): #fonction utilitaire pour vérifier s'il existe un chemin entre deux tâches dans le graphe des précédences, utilisée pour construire Smax
         visited = set()
         queue = [start]
         while queue:
@@ -124,7 +123,7 @@ class TaskSystem:
                 queue.extend(graph.get(current, []))
         return False
 
-    def is_determinated_system(self):
+    def is_determinated_system(self):#fonction qui vérifie si le système de tâches est déterminé en vérifiant que toutes les paires de tâches respectent les conditions de Bernstein
         for task1, task2 in itertools.combinations(self.tasks, 2):
             if not self.bernstein_conditions(task1, task2):
                 print(
@@ -134,7 +133,7 @@ class TaskSystem:
         print("The system is determinate.")
         return True
 
-    def generate_system_max(self):
+    def generate_system_max(self):#generation du graphe de parallélisation maximale Smax en vérifiant les conditions de Bernstein pour chaque paire de tâches et en construisant un nouveau graphe de précédences qui inclut uniquement les dépendances nécessaires pour respecter ces conditions
         if not self.is_determinated_system():
             raise ValueError("The system is not determinate. Cannot generate Smax.")
         smax_precedences_map = {task.name: [] for task in self.tasks}
@@ -157,7 +156,7 @@ class TaskSystem:
 
         return Smax
 
-    def check_input(self):
+    def check_input(self): #verifier la validité des entrées du système (nom des tâches, formatage des tâches, cohérence des précédences)
         if len(self.tasks) == 0:
             raise ValueError("No tasks to execute.")
         for task in self.tasks:
@@ -166,20 +165,25 @@ class TaskSystem:
                     f"Invalid task: {task}. All tasks must be instances of Task class."
                 )
         for task_name, dependencies_names in self.precedences_map.items():
-            print ("Checking task: ", task_name)
+            print("Checking task: ", task_name)
             for objet in self.tasks:
                 if objet.name == task_name:
                     task = objet
                     break
-            else:                raise ValueError(f"Task {task_name} in precedence map is not in tasks list.")
+            else:
+                raise ValueError(
+                    f"Task {task_name} in precedence map is not in tasks list."
+                )
             for dep_name in dependencies_names:
-                print ("  Checking dependency: ", dep_name)
+                print("  Checking dependency: ", dep_name)
                 for objet in self.tasks:
                     if objet.name == dep_name:
                         dep = objet
                         break
                 else:
-                    raise ValueError(f"Dependency {dep_name} for task {task_name} is not in tasks list.")
+                    raise ValueError(
+                        f"Dependency {dep_name} for task {task_name} is not in tasks list."
+                    )
                 if dep_name == task_name:
                     raise ValueError(f"Task {task_name} cannot depend on itself.")
                 if dep == task:  # une tâche ne peut pas dépendre d'elle-même

@@ -11,50 +11,47 @@ memoire = {
     "M5": 0
 }
 
-# --- FONCTIONS DES TÂCHES ---
-# Chaque tâche dort 0.5s pour prouver le gain de temps
 def run_t1():
     time.sleep(0.5)
     memoire["M3"] = memoire["M1"] + memoire["M2"]
-    print("  [T1] M3 écrit")
+    print("[T1] écrit dans M3 et lit dans M1, M2")
 
 def run_t2():
     time.sleep(0.5)
     memoire["M4"] = memoire["M1"] * 2
-    print("  [T2] M4 écrit")
+    print("[T2] écrit dans M4 et lit dans M1")
 
 def run_t3():
     time.sleep(0.5)
     memoire["M1"] = memoire["M3"] + memoire["M4"]
-    print("  [T3] M1 écrit")
+    print("[T3] écrit dans M1 et lit dans M3, M4")
 
 def run_t4():
     time.sleep(0.5)
     memoire["M5"] = memoire["M3"] * memoire["M4"]
-    print("  [T4] M5 écrit")
+    print("[T4] écrit dans M5 et lit dans M3, M4")
 
 def run_t5():
     time.sleep(0.5)
     memoire["M2"] = memoire["M4"] + 10
-    print("  [T5] M2 écrit")
+    print("[T5] écrit dans M2 et lit dans M4")
 
 def run_t6():
     time.sleep(0.5)
     memoire["M5"] = memoire["M5"] + 5  # Lecture ET écriture
-    print("  [T6] M5 modifié")
+    print("[T6] écrit dans M5 et lit dans M5")
 
 def run_t7():
     time.sleep(0.5)
     memoire["M4"] = memoire["M1"] + memoire["M2"] + memoire["M4"]
-    print("  [T7] M4 modifié")
+    print("[T7] écrit dans M4 et lit dans M1, M2, M4")
 
 def run_t8():
     time.sleep(0.5)
     memoire["M5"] = memoire["M1"] + memoire["M3"]
-    print("  [T8] M5 modifié")
+    print("[T8] écrit dans M5 et lit dans M1, M3")
 
 if __name__ == "__main__":
-    # nous avons utilisé le système à l page 4 du TD3 pour les tests.
     t1 = Task("T1", ["M1", "M2"], ["M3"], run_t1)
     t2 = Task("T2", ["M1"], ["M4"], run_t2)
     t3 = Task("T3", ["M3", "M4"], ["M1"], run_t3)
@@ -66,8 +63,6 @@ if __name__ == "__main__":
     
     tasks = [t1, t2, t3, t4, t5, t6, t7, t8]
 
-    # 2. DÉFINITION DU GRAPHE DE PRÉCÉDENCE INITIAL (S) SELON L'IMAGE
-    # On liste toutes les flèches du schéma
     precedence = {
         "T1": [],
         "T2": ["T1"],
@@ -83,3 +78,4 @@ if __name__ == "__main__":
     sys.is_determinated_system() # Vérification que le système est déterminé
     sys.temporary_draw_test() 
     sys.parCost()# Génération du graphe de précédence initial
+    #sys.runSeq() # Exécution du système de tâches

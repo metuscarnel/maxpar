@@ -16,7 +16,6 @@ class TaskSystem:
     def __init__(self, tasks=None, precedences_map=None):
         self.tasks = tasks if tasks is not None else []
         self.precedences_map = precedences_map if precedences_map is not None else {}
-        # S'assure que toutes les tâches sont dans le dictionnaire
         for task in self.tasks:
             if task.name not in self.precedences_map:
                 self.precedences_map[task.name] = []
@@ -29,7 +28,6 @@ class TaskSystem:
         return dependancies
 
     def _build_graph(self):
-        # Construit un graphe (Parent -> Enfants) pour le tri topologique
         graph = defaultdict(list)
         for task_name, dependencies in self.precedences_map.items():
             for dep in dependencies:
@@ -69,7 +67,6 @@ class TaskSystem:
         return condition1 and condition2 and condition3
 
     def run(self):
-        # Exécution parallèle par vagues
         smax = self.generate_system_max()
         taches_restantes = list(smax.tasks)
         taches_terminees = set()
@@ -77,7 +74,6 @@ class TaskSystem:
         while taches_restantes:
             taches_pretes = []
             for tache in taches_restantes:
-                # Dans notre convention, precedences_map contient les dépendances à attendre
                 predecesseurs = smax.precedences_map.get(tache.name, [])
                 if all(p in taches_terminees for p in predecesseurs):
                     taches_pretes.append(tache)
@@ -106,53 +102,44 @@ class TaskSystem:
         return False
 
     def is_determinated_system(self):
-        # On construit un graphe directionnel classique (Parent -> Enfant) pour bien chercher les chemins
         dir_graph = self._build_graph()
-        
         for task1, task2 in itertools.combinations(self.tasks, 2):
             # Si aucune ne précède l'autre (elles sont parallèles)
             if not self.has_path(dir_graph, task1.name, task2.name) and \
                not self.has_path(dir_graph, task2.name, task1.name):
                 
                 if not self.bernstein_conditions(task1, task2):
-                    print(f"🚨 Conflit : {task1.name} et {task2.name} sont parallèles mais partagent des variables.")
+                    print(f"{task1.name} et {task2.name} sont parallèles mais ne respectent pas les conditions de Bernstein. Système non déterminé.")
                     return False
         return True
 
     def generate_system_max(self):
         if not self.is_determinated_system():
-            raise ValueError("Le système n'est pas déterministe. Smax impossible.")
+            raise ValueError("Le système n'est pas déterminé. Impossible de construire le système de parallélisme maximal.")
             
         dir_graph = self._build_graph()
         smax_precedences = {task.name: [] for task in self.tasks}
         
         for task1, task2 in itertools.permutations(self.tasks, 2):
-            # S'il y a un chemin entre les deux
             if self.has_path(dir_graph, task1.name, task2.name):
-                # Et qu'elles NE RESPECTENT PAS Bernstein (conflit potentiel)
                 if not self.bernstein_conditions(task1, task2):
-                    # task2 doit attendre task1
                     smax_precedences[task2.name].append(task1.name)
-
-        # Réduction transitive (suppression des flèches redondantes)
         smax_reduced = {k: list(v) for k, v in smax_precedences.items()}
         for task, deps in smax_precedences.items():
             for dep in deps:
                 smax_reduced[task].remove(dep)
-                # On utilise le graphe d'attente pour la réduction
                 if not self.has_path(smax_reduced, task, dep):
                     smax_reduced[task].append(dep)
 
         return TaskSystem(tasks=self.tasks, precedences_map=smax_reduced)
 
-    def draw(self, filename="max_parallelised_system"):
-        dot = graphviz.Digraph(comment="Graphe Smax")
+    def draw(self, filename="system_graph"):
+        dot = graphviz.Digraph(comment="Graphe du système de parallélisme maximal")
         for task in self.tasks:
             dot.node(task.name)
             
         for task, dependencies in self.precedences_map.items():
             for dep in dependencies:
-                # Dessine une flèche du parent (dep) vers l'enfant (task)
                 dot.edge(dep, task)
                 
         dot.render(filename, format="png", cleanup=True)
@@ -166,31 +153,26 @@ class TaskSystem:
         for i in range(nb_iterations):
             inits_values = {var: random.randint(1, 100) for var in all_variables}
             
-            # Course 1
+            
             for var, value in inits_values.items():
                 dict_globals[var] = value
             self.run()
             result1 = {var: dict_globals[var] for var in all_variables}
             
-            # Course 2
+            
             for var, value in inits_values.items():
                 dict_globals[var] = value
             self.run()
             result2 = {var: dict_globals[var] for var in all_variables}
             
             if result1 != result2:
-                print("🚨 Le système n'est pas déterministe (Test Randomisé Échoué).")
+                print("Le système n'est pas déterministe (Test Randomisé Échoué).")
                 return False
                 
-        print("✅ Le système est déterministe (Test Randomisé Validé).")
+        print("Le système est déterministe (Test Randomisé Validé).")
         return True
 
-    def parCost(self, nb_iterations=4, warmups=1):
-        # Chauffe
-        for _ in range(warmups):
-            self.runSeq()
-            self.run()
-            
+    def parCost(self, nb_iterations=4):  
         seq_time = 0
         for _ in range(nb_iterations):
             start = time.perf_counter()
@@ -205,12 +187,11 @@ class TaskSystem:
             par_time += time.perf_counter() - start            
         moyenne_par = par_time / nb_iterations
 
-        print("\n================ RÉSULTATS FINAUX ================")
         print(f"Moyenne exécution séquentielle : {moyenne_seq:.4f} secondes")
         print(f"Moyenne exécution parallèle    : {moyenne_par:.4f} secondes")
 
 
-
-    def temporary_draw_test(self):
+    # Méthode pour dessiner les graphes du système initial et du système de parallélisme maximal
+    def draw_all(self):
         self.draw("temp_graph")
         self.generate_system_max().draw("temp_graph_smax")

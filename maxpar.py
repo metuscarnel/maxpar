@@ -19,7 +19,23 @@ class TaskSystem:
         for task in self.tasks:
             if task.name not in self.precedences_map:
                 self.precedences_map[task.name] = []
-
+    def check_input(self):
+        if len(self.tasks) == 0:
+            raise ValueError("Aucune tâche n'est définie dans le système.")
+        for task in self.tasks:
+            if not isinstance(task, Task):
+                raise ValueError(
+                    f"Tache invalide {task}. Toutes les tâches doivent être des instances de la classe Task."
+                )
+        for task, dependencies in self.precedences_map.items():
+            task_obj = next((t for t in self.tasks if t.name == task), None)
+            if task_obj is None:
+                raise ValueError(f"Tache {task} dans la map de précédences n'existe pas.")
+            for dep in dependencies:
+                dep_task = next((t for t in self.tasks if t.name == dep), None)
+                if dep_task is None:
+                    raise ValueError(f"Tache {dep} dans la map de précédences n'est pas dans la liste des tâches.")
+        
     def getDependancies(self, task_name):
         dependancies = []
         for task, dependencies in self.precedences_map.items():
@@ -104,9 +120,7 @@ class TaskSystem:
     def is_determinated_system(self):
         dir_graph = self._build_graph()
         for task1, task2 in itertools.combinations(self.tasks, 2):
-            # Si aucune ne précède l'autre (elles sont parallèles)
-            if not self.has_path(dir_graph, task1.name, task2.name) and \
-               not self.has_path(dir_graph, task2.name, task1.name):
+            if not self.has_path(dir_graph, task1.name, task2.name) and not self.has_path(dir_graph, task2.name, task1.name):
                 
                 if not self.bernstein_conditions(task1, task2):
                     print(f"{task1.name} et {task2.name} sont parallèles mais ne respectent pas les conditions de Bernstein. Système non déterminé.")
@@ -191,7 +205,7 @@ class TaskSystem:
         print(f"Moyenne exécution parallèle    : {moyenne_par:.4f} secondes")
 
 
-    # Méthode pour dessiner les graphes du système initial et du système de parallélisme maximal
     def draw_all(self):
         self.draw("temp_graph")
         self.generate_system_max().draw("temp_graph_smax")
+    

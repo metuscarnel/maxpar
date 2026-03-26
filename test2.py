@@ -25,6 +25,7 @@ def run_t4():
     memory["X"] += 5
     print("T4 terminé")
 
+
 if __name__ == "__main__":
     # Définition des objets Task
     t1 = Task("T1", ["X"], ["X"], run_t1)

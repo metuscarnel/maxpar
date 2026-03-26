@@ -6,9 +6,9 @@ from maxpar import Task, TaskSystem # Assurez-vous que l'import est correct
 memoire = {
     "M1": 1, 
     "M2": 2, 
-    "M3": 0, 
-    "M4": 0, 
-    "M5": 0
+    "M3": 3, 
+    "M4": 4, 
+    "M5": 5
 }
 
 def run_t1():
@@ -38,7 +38,7 @@ def run_t5():
 
 def run_t6():
     time.sleep(0.5)
-    memoire["M5"] = memoire["M5"] + 5  # Lecture ET écriture
+    memoire["M5"] = memoire["M5"] + 5 
     print("[T6] écrit dans M5 et lit dans M5")
 
 def run_t7():
@@ -73,9 +73,11 @@ if __name__ == "__main__":
         "T7": ["T5","T6"],
         "T8": ["T7"]
     }
-
+    def test_system(system):
+        system.parCost()
+        system.draw_all()
+    
     sys= TaskSystem(tasks, precedence)
-    sys.is_determinated_system() # Vérification que le système est déterminé
-    sys.temporary_draw_test() 
-    sys.parCost()# Génération du graphe de précédence initial
-    #sys.runSeq() # Exécution du système de tâches
+    print("Etat initial de la mémoire :", memoire)
+    test_system(sys)
+    print("Etat final de la mémoire :", memoire)

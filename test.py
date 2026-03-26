@@ -1,77 +1,54 @@
 import time
-#from task_system import Task, TaskSystem  # Assure-toi que le nom du fichier est correct
-from max import Task, TaskSystem
-# Simulation de données partagées
-memory = {"X": 0, "Y": 0, "Z": 0}
+from maxpar import Task, TaskSystem
 
-# Fonctions avec un petit sleep pour que parCost() montre une différence
+memoire = {"M1": 0, "M2": 0, "M3": 0, "M4": 0, "M5": 0}
+
 def run_t1():
-    memory["X"] = 10
-    print("T1 terminé")
-
+    time.sleep(0.5)
+    memoire["M4"] = memoire["M1"] +3
+    print("[T1] écrit dans M4 et lit dans M1")
 def run_t2():
-    memory["Y"] = 20
-    print("T2 terminé")
-
+    time.sleep(0.5)
+    memoire["M1"] = memoire["M3"] + memoire["M4"] + 2
+    print("[T2] écrit dans M1 et lit dans M3, M4")
 def run_t3():
-    memory["Z"] = memory["X"] + memory["Y"]
-    print(f"T3 terminé)")
-
+    time.sleep(0.5)
+    memoire["M5"] = memoire["M3"] + memoire["M4"] + 1
+    print("[T3] écrit dans M5 et lit dans M3, M4")
 def run_t4():
-    memory["X"] += 5
-    print("T4 terminé")
+    time.sleep(0.5)
+    memoire["M2"] = memoire["M4"] + 4
+    print("[T4] écrit dans M2 et lit dans M4")
 def run_t5():
-    memory["X"] *= 2
-    print("T5 terminé")
+    time.sleep(0.5)
+    memoire["M5"] = memoire["M5"] + 6
+    print("[T5] écrit dans M5 et lit dans M5")
 def run_t6():
-    memory["Y"] *= 2
-    print("T6 terminé")
-def run_t7():
-    memory["Z"] *= 2
-    print("T7 terminé")
-def run_t8():
-    memory["X"] -= 3
-    print("T8 terminé")
-
+    time.sleep(0.5)
+    memoire["M4"] = memoire["M1"] + memoire["M2"] + 3
+    print("[T6] écrit dans M4 et lit dans M1, M2")
+  
 if __name__ == "__main__":
-    # Définition des objets Task
-    t1 = Task("T1", ["X"], [], run_t1)
-    t2 = Task("T2", [], ["Y"], run_t2)
-    t3 = Task("T3", ["X"], ["Z"], run_t3)
-    t4 = Task("T4", ["X"], [], run_t4)
-    t5 = Task("T5", ["X"], [], run_t5)
-    t6 = Task("T6", ["X"], [], run_t6)
-    t7 = Task("T7", ["X"], [], run_t7)
-    t8 = Task("T8", ["X"], [], run_t8)
-    
-    tasks = [t1, t2, t3, t4, t5, t6, t7, t8]
 
-    # Précédences minimales : on laisse Bernstein faire le reste
+    t1 = Task("T1", reads=["M1"], writes=["M4"], run=run_t1)
+    t2 = Task("T2", reads=["M3", "M4"], writes=["M1"], run=run_t2)
+    t3 = Task("T3", reads=["M3", "M4"], writes=["M5"], run=run_t3)
+    t4 = Task("T4", reads=["M4"], writes=["M2"], run=run_t4)
+    t5 = Task("T5", reads=["M5"], writes=["M5"], run=run_t5)
+    t6 = Task("T6", reads=["M1", "M2"], writes=["M4"], run=run_t6)
+
+    tasks = [t1, t2, t3, t4, t5, t6]
+    
     precedence = {
-        "T1": [],
-        "T2": ["T1"],
-        "T3": ["T1"],
-        "T4": ["T2"],
-        "T5": ["T1"],
-        "T7": ["T4"],
-        "T8": ["T4", "T5"]
+        "T1": [],            
+        "T2": ["T1"],       
+        "T3": ["T1"],        
+        "T4": ["T2"],        
+        "T5": ["T2", "T3"],  
+        "T6": ["T4", "T5"]  
     }
 
-    # Initialisation du système
-    sys = TaskSystem(tasks, precedence)
-    #sys.temporary_draw_test()
-    #sys.detTestRnd(globals(), nb_iterations=3)
-    # 1. Génération du PNG dans le répertoire courant
-    print("--- Génération du graphe ---")
-    #sys.draw("mon_graphe_execution")sy)
-    sys.parCost()
-
-    # 2. Test des performances (Séquentiel vs Parallèle)
-    print("\n--- Analyse des coûts ---")
-    print("Sequential execution :")
-    #print(sys.topological_sort())
-    #sys.runSeq()
-    #sys.run()
-
-    #3. Vérification du résultat final
-    print(f"\nÉtat final de la mémoire : {memory}")
+    sys = TaskSystem(tasks=tasks, precedences_map=precedence)
+    sys.check_input()
+    sys.parCost()  
+    sys.draw_all() 

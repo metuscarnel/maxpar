@@ -1,6 +1,6 @@
 import time
 import random
-from maxpar import Task, TaskSystem # Assurez-vous que l'import est correct
+from maxpar import Task, TaskSystem
 
 # Simulation des 5 cases mémoire (M1 à M5)
 memoire = {

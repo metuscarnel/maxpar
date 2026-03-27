@@ -72,7 +72,6 @@ class TaskSystem:
         for task_name in [t.name for t in self.tasks]:
             dfs(task_name)
 
-        # Retourne les objets Task dans le bon ordre
         order_names = order[::-1]
         task_dict = {t.name: t for t in self.tasks}
         return [task_dict[name] for name in order_names]

@@ -1,3 +1,22 @@
+""" Le projet MaxPar a été réalisé en binôme par Métus Gbogbohoundada et Youssef Kassou
+Le dépôt du projet est aussi disponible à cette adresse : https://github.com/metuscarnel/maxpar/tree/metus_version
+ Il permet de suivre les différentes étapes de l'évolution du projet, et de voir les différentes versions du code ainsi que les difficultés rencontrées et les solutions apportées.
+ Quelques références utilisées pour la réalisation du projet :
+ - https://ecampus.paris-saclay.fr/course/view.php?id=172689
+ - https://ecampus.paris-saclay.fr/pluginfile.php/4540864/mod_resource/content/17/sye.pdf
+ - https://ecampus.paris-saclay.fr/pluginfile.php/4540861/mod_resource/content/2/se-04.pdf
+ - https://ecampus.paris-saclay.fr/pluginfile.php/4540866/mod_resource/content/1/se-td3.pdf
+ - https://realpython.com/python-dicts/
+ - https://www.w3schools.com/python/gloss_python_class_init.asp
+ - https://fr.wikipedia.org/wiki/Tri_topologique
+ - https://www.enseignement.polytechnique.fr/profs/informatique/Eric.Goubault/Cours05html/poly.html
+ - https://perso.eleves.ens-rennes.fr/people/julie.parreaux/fichiers_agreg/info_dev/TriTopologique.pdf
+ - https://sites.google.com/site/pythonpasapas/methodes/next
+ - https://graphviz.org/
+ - https://www.geeksforgeeks.org/python/defaultdict-in-python/
+ - https://docs.python.org/3/library/collections.html
+ """
+
 import time
 from maxpar import Task, TaskSystem
 

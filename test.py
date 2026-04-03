@@ -81,10 +81,12 @@ if __name__ == "__main__":
     }
     print("Etat initial de la mémoire :", memoire)
     sys = TaskSystem(tasks=tasks, precedences_map=precedence)
-    sys.check_input()
-    sys.parCost()
-    sys.draw_all()
+    #sys.check_input()
+    #sys.parCost()
+    #sys.draw_all()
     print("Etat final de la mémoire :", memoire)
+    print(sys._build_graph())
+    print(sys.precedences_map)
     # ceci est un test de vérification avec l'exemple de l'exercice 4.1 du TD3
     """memoire = {
     "M1": 1, 

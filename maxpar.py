@@ -233,5 +233,5 @@ class TaskSystem:
         print(f"Moyenne exécution parallèle    : {moyenne_par:.4f} secondes")
 
     def draw_all(self):
-        self.draw("temp_graph")
-        self.generate_system_max().draw("temp_graph_smax")
+        self.draw("initial_system_graph")
+        self.generate_system_max().draw("max_parallel_system_graph")
